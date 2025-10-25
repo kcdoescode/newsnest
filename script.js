@@ -22,16 +22,38 @@ const API_KEY = "9819a423b6539f1daf829df6ec1b23cb";
 const newsContainer = document.getElementById("news-container");
 
 // 📰 Fetch & Display News
-async function fetchNews(query = "top headlines")
- {
+async function fetchNews(query = "top headlines") {
   try {
     showLoadingPlaceholders(); // ✨ shimmer while loading
-   await new Promise(r => setTimeout(r, 1000)); // 1 sec delay before fetching
+    await new Promise(r => setTimeout(r, 1000)); // 1 sec delay before fetching
 
     newsContainer.innerHTML = "";
-    const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=9&apikey=${API_KEY}`;
-    const res = await fetch(url);
-    const data = await res.json();
+
+    // ----------------------------------------------------
+    // 🔑 START OF CORS FIX (Changes are here)
+    // ----------------------------------------------------
+
+    // 1. Construct the original GNews URL
+    const originalGNewsUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&lang=en&max=9&apikey=${API_KEY}`;
+
+    // 2. Wrap the GNews URL with the allOrigins proxy and encode it
+    // This bypasses the CORS block on your live link.
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(originalGNewsUrl)}`;
+
+    const res = await fetch(proxyUrl); // Use the PROXY URL
+    const proxyData = await res.json(); // Get the proxy's wrapper response
+
+    // Check for proxy-level errors or if contents property is missing
+    if (!proxyData.contents) {
+      throw new Error("Could not retrieve contents from proxy. Check network status.");
+    }
+
+    // 3. Parse the 'contents' string to get the actual news JSON object
+    const data = JSON.parse(proxyData.contents);
+
+    // ----------------------------------------------------
+    // 🔑 END OF CORS FIX
+    // ----------------------------------------------------
 
     if (!data.articles || data.articles.length === 0) {
       newsContainer.innerHTML = `<p class="text-gray-500 dark:text-gray-300 col-span-full">No articles found 😞</p>`;
@@ -60,11 +82,11 @@ function showLoadingPlaceholders(count = 6) {
     placeholder.className = "bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 card-animation";
 
     placeholder.innerHTML = `
-      <div class="w-full h-48 bg-gray-300 dark:bg-gray-700 shimmer rounded-md mb-4"></div>
-      <div class="h-5 bg-gray-300 dark:bg-gray-700 shimmer rounded w-3/4 mb-2"></div>
-      <div class="h-4 bg-gray-300 dark:bg-gray-700 shimmer rounded w-full mb-2"></div>
-      <div class="h-4 bg-gray-300 dark:bg-gray-700 shimmer rounded w-5/6"></div>
-    `;
+      <div class="w-full h-48 bg-gray-300 dark:bg-gray-700 shimmer rounded-md mb-4"></div>
+      <div class="h-5 bg-gray-300 dark:bg-gray-700 shimmer rounded w-3/4 mb-2"></div>
+      <div class="h-4 bg-gray-300 dark:bg-gray-700 shimmer rounded w-full mb-2"></div>
+      <div class="h-4 bg-gray-300 dark:bg-gray-700 shimmer rounded w-5/6"></div>
+    `;
 
     newsContainer.appendChild(placeholder);
   }
@@ -82,19 +104,19 @@ function createCard(article) {
   card.setAttribute("data-id", articleId);
 
   card.innerHTML = `
-    <img src="${article.image || 'https://source.unsplash.com/random/600x300?news'}"
-         alt="News Image" class="w-full h-48 object-cover" />
-    <div class="p-4 flex flex-col gap-2">
-      <h2 class="text-lg font-semibold text-gray-800 dark:text-white">${article.title}</h2>
-      <p class="text-sm text-gray-600 dark:text-gray-300">${article.description || "No description available."}</p>
-      <div class="flex items-center justify-between mt-2">
-        <a href="${article.url}" target="_blank" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Read More</a>
-        <button class="save-btn text-xl hover:scale-110 transition">
-          ${alreadySaved ? '<span class="text-red-500">❤️</span>' : '<span class="text-gray-400">♡</span>'}
-        </button>
-      </div>
-    </div>
-  `;
+    <img src="${article.image || 'https://source.unsplash.com/random/600x300?news'}"
+         alt="News Image" class="w-full h-48 object-cover" />
+    <div class="p-4 flex flex-col gap-2">
+      <h2 class="text-lg font-semibold text-gray-800 dark:text-white">${article.title}</h2>
+      <p class="text-sm text-gray-600 dark:text-gray-300">${article.description || "No description available."}</p>
+      <div class="flex items-center justify-between mt-2">
+        <a href="${article.url}" target="_blank" class="text-sm text-blue-600 hover:underline dark:text-blue-400">Read More</a>
+        <button class="save-btn text-xl hover:scale-110 transition">
+          ${alreadySaved ? '<span class="text-red-500">❤️</span>' : '<span class="text-gray-400">♡</span>'}
+        </button>
+      </div>
+    </div>
+  `;
 
   newsContainer.appendChild(card);
   attachSaveLogic(card); // ✅ attach heart logic

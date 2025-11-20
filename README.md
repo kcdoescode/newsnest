@@ -3,6 +3,12 @@
 Stay updated with the latest headlines around the world 🌍  
 **NewsNest** is a real-time news web app built using the **GNews API**, featuring a clean and modern UI.
 
+# 📰 Screenshot 
+<img width="1904" height="905" alt="image" src="https://github.com/user-attachments/assets/c5907fc8-e953-40b8-b0f3-69970fb52b57" />
+<img width="1920" height="914" alt="image" src="https://github.com/user-attachments/assets/ad5b686f-5133-4bc6-8213-5bb36350b7ed" />
+
+
+
 ## 🚀 Features
 - 🔎 Search for news articles by keyword  
 - 🌐 Browse top headlines by category & country  
